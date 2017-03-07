@@ -1,0 +1,96 @@
+//This code takes images and then selects blobs on the basis of area 
+//the blob whose area is less than a required threshold value the are rejected
+//Also the coordinates of the selected blob are displayed in the output screen
+
+#include "opencv2/opencv.hpp"
+#include<iostream>
+
+#include<stdio.h>
+
+using namespace cv;
+using namespace std;
+int main(){
+
+
+Mat im = imread( "dotBlueWhite.png" );
+
+
+cv::SimpleBlobDetector::Params params;
+params.minDistBetweenBlobs = 50.0f;
+params.filterByInertia = false;
+params.filterByConvexity = false;
+params.filterByColor = true ;
+params.blobColor=255;
+params.filterByCircularity = false;
+params.filterByArea = true;
+params.minArea = 500.0f;
+params.maxArea = 10999.0f;
+
+// ... any other params you don't want default value
+
+// set up and create the detector using the parameters
+cv::SimpleBlobDetector blob_detector(params);
+// or cv::Ptr<cv::SimpleBlobDetector> detector = cv::SimpleBlobDetector::create(params)
+
+// detect!
+vector<cv::KeyPoint> keypoints;
+blob_detector.detect(im, keypoints);
+
+// extract the x y coordinates of the keypoints:
+
+for (int i=0; i<keypoints.size(); i++){
+    float X = keypoints[i].pt.x;
+    float Y = keypoints[i].pt.y;
+//cout<<"hh";
+    cout<<X<<" "<<Y<<endl;
+    cout<<"Size:"<<(keypoints[i].size)<<endl;
+}
+Mat im_with_keypoints;
+	drawKeypoints( im, keypoints, im_with_keypoints, Scalar(0,255,0), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+	// Show blobs
+	imshow("keypoints", im_with_keypoints );
+
+
+
+
+cv::SimpleBlobDetector::Params para;
+para.minDistBetweenBlobs = 50.0f;
+para.filterByInertia = false;
+para.filterByConvexity = false;
+para.filterByColor = true ;
+para.blobColor=255;
+para.filterByCircularity = false;
+para.filterByArea = true;
+para.minArea = 8000.0f;
+para.maxArea = 10999.0f;
+cv::SimpleBlobDetector blob_detectora(para);
+// or cv::Ptr<cv::SimpleBlobDetector> detector = cv::SimpleBlobDetector::create(para)
+
+// detect!
+vector<cv::KeyPoint> keypoint;
+blob_detectora.detect(im, keypoint);
+
+// extract the x y coordinates of the keypoints:
+
+for (int i=0; i<keypoint.size(); i++){
+    float X = keypoint[i].pt.x;
+    float Y = keypoint[i].pt.y;
+//cout<<"hh";
+    cout<<X<<" "<<Y<<endl;
+    cout<<"Size:"<<(keypoint[i].size)<<endl;
+}
+Mat im_with_keypoint;
+	drawKeypoints( im, keypoint, im_with_keypoint, Scalar(0,255,0), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+	// Show blobs
+	imshow("keypoint", im_with_keypoint );
+
+
+
+
+	waitKey(0);
+
+
+return 0;
+}
