@@ -1,0 +1,109 @@
+//This code takes the live video feed from the webcam and the various parameters such as hue,saturation 
+//..., can be changed to get a blob of specified color and then the blob of the spcific color is detected and
+//the coordinates of the blob are shown on the output screen
+#include "opencv2/opencv.hpp"
+
+using namespace cv;
+
+using namespace std;
+
+int main(int, char**)
+{
+   VideoCapture cap(0); //capture the video from web cam
+
+    if ( !cap.isOpened() )  // if not success, exit program
+    {
+         cout << "Cannot open the web cam" << endl;
+         return -1;
+    }
+
+    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+int c=0;
+ int iLowH = 90;
+ int iHighH = 179;
+
+ int iLowS = 78;
+ int iHighS = 201;
+
+ int iLowV = 24;
+ int iHighV = 82;
+
+// Create trackbars in "Control" window
+ cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
+ cvCreateTrackbar("HighH", "Control", &iHighH, 179);
+
+ cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
+ cvCreateTrackbar("HighS", "Control", &iHighS, 255);
+
+ cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
+ cvCreateTrackbar("HighV", "Control", &iHighV, 255);
+   for(;;) {
+        Mat imgOriginal;
+
+        bool bSuccess = cap.read(imgOriginal); // read a new frame from video
+
+         if (!bSuccess) //if not success, break loop
+        {
+             cout << "Cannot read a frame from video stream" << endl;
+             break;
+        }
+
+  Mat imgHSV;
+
+  cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+
+  Mat imgThresholded;
+
+  inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+
+  //morphological opening (remove small objects from the foreground)
+  erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+  //morphological closing (fill small holes in the foreground)
+  dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+  imshow("Thresholded Image", imgThresholded); //show the thresholded image
+  imshow("Original", imgOriginal); //show the original image
+
+        if (waitKey(20) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+       {
+            cout << "esc key is pressed by user" << endl;
+            break;
+       }
+
+if(c==100){imwrite("/home/nischal/codeblockss/opencv25/img1.jpg",imgThresholded);}
+c++;
+
+
+Mat im = imgThresholded;
+
+cv::SimpleBlobDetector::Params params;
+params.minDistBetweenBlobs = 5.0f;
+params.filterByInertia = false;
+params.filterByConvexity = false;
+params.filterByColor = true ;
+params.blobColor=0;
+params.filterByCircularity = true;
+params.minCircularity=0.8;
+//params.filterByArea = true;
+//params.minArea = 500.0f;
+//params.maxArea = 700000.0f;
+cv::SimpleBlobDetector blob_detector(params);
+vector<cv::KeyPoint> keypoints;
+blob_detector.detect(im, keypoints);
+
+// extract the x y coordinates of the keypoints:
+
+for (int i=0; i<keypoints.size(); i++){
+    float X = keypoints[i].pt.x;
+    float Y = keypoints[i].pt.y;
+//cout<<"hh";
+    cout<<"X="<<X<<" "<<"Y="<<Y<<endl;
+}
+Mat im_with_keypoints;
+	drawKeypoints( im, keypoints, im_with_keypoints, Scalar(0,255,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    }
+    return 0;
+}
